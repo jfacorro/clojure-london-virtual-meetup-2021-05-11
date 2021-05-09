@@ -1,0 +1,13 @@
+{ application, 'tolerant_processes'
+, [ {vsn, git}
+  , {description, "A Clojerl application"}
+  , {modules, []}
+  , { applications
+    , [ stdlib
+      , kernel
+      , clojerl
+      ]
+    }
+  , {mod, {'tolerant_processes.app', []}}
+  ]
+}.

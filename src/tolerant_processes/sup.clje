@@ -1,0 +1,15 @@
+(ns tolerant_processes.sup)
+
+(def sup-flags #erl{:strategy  :one_for_one
+                    :intensity 1
+                    :period    5})
+
+(def child-specs #erl())
+
+(defn start-link []
+  (supervisor/start_link #erl[:local :tolerant_processes.sup]
+                         :tolerant_processes.sup
+                         #erl()))
+
+(defn init [_]
+  #erl[:ok #erl[sup-flags child-specs]])
