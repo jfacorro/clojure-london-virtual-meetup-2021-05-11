@@ -1,4 +1,4 @@
-(ns tolerant_processes.sup)
+(ns tolerant-processes.sup)
 
 (def sup-flags #erl{:strategy  :one_for_one
                     :intensity 1

@@ -1,5 +1,5 @@
-(ns tolerant_processes.app
-  (:require [tolerant_processes.sup :as sup]))
+(ns tolerant-processes.app
+  (:require [tolerant-processes.sup :as sup]))
 
 (defn start [type args]
   (sup/start-link))
