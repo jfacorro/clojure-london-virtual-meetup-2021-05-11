@@ -1,1 +1,101 @@
 (ns tolerant-processes.core)
+
+(comment
+  (use 'tolerant-processes.core)
+
+  ;; ======================================================
+  ;; Processes
+  ;; ======================================================
+
+  (erlang/processes)
+
+  (erlang/self)
+
+  (some (partial = (erlang/self)) (erlang/processes))
+
+  (count (erlang/processes))
+
+  ;; ======================================================
+  ;; Spawning processes
+  ;; ======================================================
+
+  (erlang/spawn (fn [] (println "Hello!")))
+
+  (erlang/spawn (fn [] (println (str "Hello, my name is " (erlang/self) "."))))
+
+  (count (erlang/processes))
+
+  ;; ======================================================
+  ;; Spawn macro
+  ;; ======================================================
+
+  (defmacro spawn [& body]
+    `(erlang/spawn (fn [] ~@body)))
+
+  (spawn (println "Hello"))
+
+  ;; ======================================================
+  ;; Sending and receiving messages
+  ;; ======================================================
+
+  ;; Spawn a process that waits to receive a message
+  (spawn (receive* x (println (str "I received " x))))
+
+  (count (erlang/processes)) ;;= +1 than previous count
+
+  ;; Send a message
+  (erlang/send *2 :some-message)
+
+  (count (erlang/processes)) ;;= -1 than previous count
+
+  ;; Spawn a process that waits message and then recurses
+  (->> (spawn (receive* x (println (str "I received " x)))
+              (recur))
+       ;; Register the process with a name
+       (erlang/register :receiver))
+
+  (erlang/registered)
+
+  (doseq [x (sort (erlang/registered))] (println x))
+
+  (erlang/send :receiver :some-message)
+
+  (erlang/send :receiver :another-message)
+
+  (count (erlang/processes))
+
+  (-> (erlang/whereis :receiver)
+      (erlang/exit :kill))
+
+  (count (erlang/processes))
+
+  ;; ======================================================
+  ;; Monitors
+  ;; ======================================================
+
+  (erlang/spawn_monitor (fn [] (println "I'm being monitored!!!")))
+
+  (c/flush)
+
+  ;; ======================================================
+  ;; Erlang lists and Clojure lists
+  ;; ======================================================
+
+  #erl(1 2 3)
+  '(1 2 3)
+
+  (= #erl(1 2 3) '(1 2 3)) ;;= true
+
+  (= (type #erl(1 2 3))
+     (type '(1 2 3))) ;;= true
+
+  )
+
+(defmacro spawn [& body]
+  `(erlang/spawn (fn [] ~@body)))
+
+(defmacro spawn-monitor [& body]
+  `(erlang/spawn_monitor (fn [] ~@body)))
+
+(defmacro spawn-link [& body]
+  `(erlang/spawn_link (fn [] ~@body)))
