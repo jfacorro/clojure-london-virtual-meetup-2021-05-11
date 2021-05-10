@@ -49,8 +49,9 @@
   (count (erlang/processes)) ;;= -1 than previous count
 
   ;; Spawn a process that waits message and then recurses
-  (->> (spawn (receive* x (println (str "I received " x)))
-              (recur))
+  (->> (spawn (loop []
+                (receive* x (println (str "I received " x)))
+                (recur)))
        ;; Register the process with a name
        (erlang/register :receiver))
 
@@ -77,6 +78,56 @@
 
   (c/flush)
 
+  ;; We can also add monitor to an existing process
+  (->> (spawn (receive* x (println (str "I received " x)))
+              (recur))
+       ;; Register the process with a name
+       (erlang/register :receiver))
+
+  (erlang/monitor :process :receiver)
+
+  ;; ======================================================
+  ;; Links
+  ;; ======================================================
+
+  (defn receiver [name]
+    (println "Registering" (erlang/self) "with name" name)
+    (erlang/register name (erlang/self))
+    (loop []
+      (receive* x (println (str "I, " name ", received " x)))
+      (recur)))
+
+  (spawn (receiver :blip))
+  (spawn (erlang/link (erlang/whereis :blip))
+         (receiver :blup))
+
+  (erlang/send :blip :hello)
+  (erlang/send :blup :hola)
+
+  (-> (erlang/whereis :blip) (erlang/exit :kill))
+
+  ;; They are both gone
+  (map #(erlang/whereis %) [:blip :blup])
+
+  ;; It's possible to link any number of processes
+  (spawn (receiver :blip))
+  (spawn (erlang/link (erlang/whereis :blip))
+         (receiver :blup))
+  (spawn (erlang/link (erlang/whereis :blup))
+         (receiver :blap))
+
+  (erlang/send :blip :hello)
+  (erlang/send :blup :hola)
+  (erlang/send :blap :hej)
+
+  ;; They are all there
+  (map #(erlang/whereis %) [:blip :blup :blap])
+
+  (-> (erlang/whereis :blip) (erlang/exit :error))
+
+  ;; They are all gone
+  (map #(erlang/whereis %) [:blip :blup :blap])
+
   ;; ======================================================
   ;; Erlang lists and Clojure lists
   ;; ======================================================
@@ -88,8 +139,7 @@
 
   (= (type #erl(1 2 3))
      (type '(1 2 3))) ;;= true
-
-  )
+)
 
 (defmacro spawn [& body]
   `(erlang/spawn (fn [] ~@body)))
@@ -99,3 +149,10 @@
 
 (defmacro spawn-link [& body]
   `(erlang/spawn_link (fn [] ~@body)))
+
+(defn receiver [name]
+  (println "Registering" (erlang/self) "with name" name)
+  (erlang/register name (erlang/self))
+  (loop []
+    (receive* x (println (str "I, " name ", received " x)))
+    (recur)))
