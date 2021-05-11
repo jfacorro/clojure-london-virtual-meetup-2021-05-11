@@ -66,7 +66,7 @@
   (count (erlang/processes))
 
   (-> (erlang/whereis :receiver)
-      (erlang/exit :kill))
+      (erlang/exit :shutdown))
 
   (count (erlang/processes))
 
@@ -76,7 +76,7 @@
 
   (erlang/spawn_monitor (fn [] (println "I'm being monitored!!!")))
 
-  (c/flush)
+  (receive* x x (after 0 :no-messages))
 
   ;; We can also add monitor to an existing process
   (->> (spawn (receive* x (println (str "I received " x)))
@@ -104,7 +104,7 @@
   (erlang/send :blip :hello)
   (erlang/send :blup :hola)
 
-  (-> (erlang/whereis :blip) (erlang/exit :kill))
+  (-> (erlang/whereis :blip) (erlang/exit :shutdown))
 
   ;; They are both gone
   (map #(erlang/whereis %) [:blip :blup])
@@ -123,7 +123,7 @@
   ;; They are all there
   (map #(erlang/whereis %) [:blip :blup :blap])
 
-  (-> (erlang/whereis :blip) (erlang/exit :error))
+  (-> (erlang/whereis :blip) (erlang/exit :shutdown))
 
   ;; They are all gone
   (map #(erlang/whereis %) [:blip :blup :blap])
