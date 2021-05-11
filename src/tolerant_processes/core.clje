@@ -1,8 +1,6 @@
 (ns tolerant-processes.core)
 
 (comment
-  (use 'tolerant-processes.core)
-
   ;; ======================================================
   ;; Processes
   ;; ======================================================
@@ -71,26 +69,11 @@
   (count (erlang/processes))
 
   ;; ======================================================
-  ;; Monitors
-  ;; ======================================================
-
-  (erlang/spawn_monitor (fn [] (println "I'm being monitored!!!")))
-
-  (receive* x x (after 0 :no-messages))
-
-  ;; We can also add monitor to an existing process
-  (->> (spawn (receive* x (println (str "I received " x)))
-              (recur))
-       ;; Register the process with a name
-       (erlang/register :receiver))
-
-  (erlang/monitor :process :receiver)
-
-  ;; ======================================================
   ;; Links
   ;; ======================================================
 
-  (defn receiver [name]
+  (defn receiver
+    [name]
     (println "Registering" (erlang/self) "with name" name)
     (erlang/register name (erlang/self))
     (loop []
@@ -127,6 +110,22 @@
 
   ;; They are all gone
   (map #(erlang/whereis %) [:blip :blup :blap])
+
+  ;; ======================================================
+  ;; Monitors
+  ;; ======================================================
+
+  (erlang/spawn_monitor (fn [] (println "I'm being monitored!!!")))
+
+  (receive* x x (after 0 :no-messages))
+
+  ;; We can also add monitor to an existing process
+  (->> (spawn (receive* x (println (str "I received " x)))
+              (recur))
+       ;; Register the process with a name
+       (erlang/register :receiver))
+
+  (erlang/monitor :process :receiver)
 
   ;; ======================================================
   ;; Erlang lists and Clojure lists
